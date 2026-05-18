@@ -27,7 +27,13 @@ export function SuperadminGate({ children }: { children: React.ReactNode }) {
     queryFn: () =>
       checkAuthz({
         user: authzSubject(claims!),
-        relation: "superadmin",
+        // `admin` on `tenant:platform` is the effective superadmin check:
+        // bootstrap_platform_superadmin + openfga_sync map the "superadmin"
+        // membership role to {member, admin, platform_admin} tuples (NOT a
+        // literal `superadmin` tuple), and only platform-tenant admins ever
+        // hold `admin` on `tenant:platform`. Until bootstrap also writes a
+        // `superadmin` tuple, check `admin` here.
+        relation: "admin",
         object_type: "tenant",
         object_id: "platform",
       }),
