@@ -1,11 +1,12 @@
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, expect, test } from "vitest";
 import { checkAuthz } from "./authz";
 
 const server = setupServer();
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+beforeEach(() => localStorage.clear());
+afterEach(() => { server.resetHandlers(); localStorage.clear(); });
 afterAll(() => server.close());
 
 test("checkAuthz posts the tuple to /api/v1/authz/check and returns allowed flag", async () => {
