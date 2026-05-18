@@ -1,0 +1,7 @@
+# Cloudflare Pages config for floofpark-admin-web.
+# Account: Floof (8dc1500719a64f59392bab20fae4a41e)
+# Domain: admin.floofpark.com
+
+name = "floofpark-admin"
+compatibility_date = "2026-02-18"
+pages_build_output_dir = "frontend/dist"
