@@ -12,7 +12,7 @@ afterAll(() => server.close());
 // Filter params: type, state, cursor, limit — NO text/q search
 test("listTenants returns the tenants array from /api/v1/tenants", async () => {
   server.use(
-    http.get("https://tenant-identity.floofpark.app/api/v1/tenants", ({ request }) => {
+    http.get("https://tenants.floofpark.app/api/v1/tenants", ({ request }) => {
       const u = new URL(request.url);
       expect(u.searchParams.get("limit")).toBe("50");
       return HttpResponse.json({
@@ -42,7 +42,7 @@ test("listTenants returns the tenants array from /api/v1/tenants", async () => {
 test("listTenants passes type filter", async () => {
   let capturedType: string | null = null;
   server.use(
-    http.get("https://tenant-identity.floofpark.app/api/v1/tenants", ({ request }) => {
+    http.get("https://tenants.floofpark.app/api/v1/tenants", ({ request }) => {
       capturedType = new URL(request.url).searchParams.get("type");
       return HttpResponse.json({ tenants: [], next_cursor: null });
     }),
@@ -53,7 +53,7 @@ test("listTenants passes type filter", async () => {
 
 test("getTenant returns the tenant by id", async () => {
   server.use(
-    http.get("https://tenant-identity.floofpark.app/api/v1/tenants/t1", () =>
+    http.get("https://tenants.floofpark.app/api/v1/tenants/t1", () =>
       HttpResponse.json({
         id: "t1",
         display_name: "Acme Vet",

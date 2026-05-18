@@ -34,7 +34,7 @@ test("gated /tenants route renders list when superadmin is allowed", async () =>
   window.history.pushState({}, "", "/tenants");
   server.use(
     http.post("https://auth.floofpark.app/api/v1/authz/check", () => HttpResponse.json({ allowed: true })),
-    http.get("https://tenant-identity.floofpark.app/api/v1/tenants", () =>
+    http.get("https://tenants.floofpark.app/api/v1/tenants", () =>
       HttpResponse.json({ tenants: [], next_cursor: null }),
     ),
   );

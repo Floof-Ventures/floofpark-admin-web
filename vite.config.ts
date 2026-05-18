@@ -12,7 +12,7 @@ export default defineConfig({
       // Dev proxy so localhost calls go to real services without CORS pain.
       "/api/v1/auth": { target: "https://auth.floofpark.app", changeOrigin: true, secure: true },
       "/api/v1/authz": { target: "https://auth.floofpark.app", changeOrigin: true, secure: true },
-      "/api/v1/tenants": { target: "https://tenant-identity.floofpark.app", changeOrigin: true, secure: true },
+      "/api/v1/tenants": { target: "https://tenants.floofpark.app", changeOrigin: true, secure: true },
       "/api/v1/audit": { target: "https://audit.floofpark.app", changeOrigin: true, secure: true },
     },
   },
