@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthRequiredError } from "@/api/client";
 import { checkAuthz } from "@/api/authz";
 import { clearToken, getToken } from "./tokenStorage";
-import { decodeClaims, isExpired } from "./jwtClaims";
+import { authzSubject, decodeClaims, isExpired } from "./jwtClaims";
 import { redirectToLogin } from "./loginRedirect";
 import { NoAccessPage } from "./NoAccessPage";
 
@@ -21,12 +21,12 @@ export function SuperadminGate({ children }: { children: React.ReactNode }) {
   }, []);
 
   const authz = useQuery({
-    queryKey: ["authz", claims?.user_id],
+    queryKey: ["authz", claims ? authzSubject(claims) : null],
     enabled: !!claims,
     retry: false,
     queryFn: () =>
       checkAuthz({
-        user: `user:${claims!.user_id}`,
+        user: authzSubject(claims!),
         relation: "superadmin",
         object_type: "tenant",
         object_id: "platform",

@@ -41,6 +41,36 @@ test("renders NoAccessPage when authz denies", async () => {
   await waitFor(() => expect(screen.getByText(/no access/i)).toBeInTheDocument());
 });
 
+test("uses sub (email) as authz subject when user_id claim is absent", async () => {
+  setToken(makeToken({ sub: "z@floof.ventures", aud: "floofpark", exp: 9999999999 }));
+  let observedSubject: string | undefined;
+  server.use(
+    http.post("https://auth.floofpark.app/api/v1/authz/check", async ({ request }) => {
+      const body = (await request.json()) as { user: string };
+      observedSubject = body.user;
+      return HttpResponse.json({ allowed: true });
+    }),
+  );
+  wrap(<SuperadminGate><div data-testid="inner">ok</div></SuperadminGate>);
+  await waitFor(() => expect(screen.getByTestId("inner")).toBeInTheDocument());
+  expect(observedSubject).toBe("user:z@floof.ventures");
+});
+
+test("uses user_id as authz subject when present", async () => {
+  setToken(makeToken({ sub: "z@floof.ventures", user_id: "u123", aud: "floofpark", exp: 9999999999 }));
+  let observedSubject: string | undefined;
+  server.use(
+    http.post("https://auth.floofpark.app/api/v1/authz/check", async ({ request }) => {
+      const body = (await request.json()) as { user: string };
+      observedSubject = body.user;
+      return HttpResponse.json({ allowed: true });
+    }),
+  );
+  wrap(<SuperadminGate><div data-testid="inner">ok</div></SuperadminGate>);
+  await waitFor(() => expect(screen.getByTestId("inner")).toBeInTheDocument());
+  expect(observedSubject).toBe("user:u123");
+});
+
 test("redirects to login when no token is present", async () => {
   const original = window.location;
   const assignMock = vi.fn();
