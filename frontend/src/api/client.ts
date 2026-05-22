@@ -1,4 +1,4 @@
-import { clearToken, getToken } from "@/auth/tokenStorage";
+import { tryRefresh } from "@/auth/refresh";
 
 export class AuthRequiredError extends Error {
   constructor() {
@@ -11,18 +11,22 @@ export async function apiFetch<T = unknown>(
   url: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const token = getToken();
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    ...(init.headers as Record<string, string> | undefined ?? {}),
-  };
-  if (token) headers.Authorization = `Bearer ${token}`;
+  const doFetch = () =>
+    fetch(url, {
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        ...(init.headers as Record<string, string> | undefined ?? {}),
+      },
+      ...init,
+    });
 
-  const response = await fetch(url, { ...init, headers });
+  let response = await doFetch();
   if (response.status === 401) {
-    clearToken();
-    throw new AuthRequiredError();
+    const refreshed = await tryRefresh();
+    if (refreshed) response = await doFetch();
   }
+  if (response.status === 401) throw new AuthRequiredError();
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;

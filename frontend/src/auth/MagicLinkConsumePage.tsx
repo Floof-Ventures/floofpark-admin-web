@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { setToken } from "./tokenStorage";
 
 const CONSUME_URL = "https://auth.floofpark.app/api/v1/auth/magic-link/consume";
-
-interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
 
 export function MagicLinkConsumePage() {
   const [params] = useSearchParams();
@@ -32,14 +25,17 @@ export function MagicLinkConsumePage() {
       const body = new URLSearchParams({ token });
       const res = await fetch(CONSUME_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+        credentials: "include",  // Set-Cookie lands in browser cookie jar
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/json",
+        },
         body,
       });
       if (!res.ok) throw new Error(`consume failed: ${res.status}`);
-      const json = (await res.json()) as TokenResponse;
-      setToken(json.access_token);
-      // Navigate to return_to (only allow same-origin paths)
-      const target = returnTo.startsWith("/") ? returnTo : "/tenants";
+      // The cookie is now set. Discard the JSON body (the token is also stored
+      // server-side via the cookie). Navigate to the target.
+      const target = returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/tenants";
       navigate(target, { replace: true });
     } catch (e) {
       setStatus("error");

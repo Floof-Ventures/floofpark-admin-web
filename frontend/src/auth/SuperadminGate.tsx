@@ -1,57 +1,39 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AuthRequiredError } from "@/api/client";
 import { checkAuthz } from "@/api/authz";
-import { clearToken, getToken } from "./tokenStorage";
-import { authzSubject, decodeClaims, isExpired } from "./jwtClaims";
+import { whoami } from "@/api/whoami";
 import { redirectToLogin } from "./loginRedirect";
 import { NoAccessPage } from "./NoAccessPage";
 
 export function SuperadminGate({ children }: { children: React.ReactNode }) {
-  const claims = useMemo(() => {
-    const token = getToken();
-    if (!token) return null;
-    const c = decodeClaims(token);
-    if (!c) return null;
-    if (isExpired(c)) {
-      clearToken();
-      return null;
-    }
-    return c;
-  }, []);
+  const me = useQuery({
+    queryKey: ["whoami"],
+    queryFn: whoami,
+    retry: false,
+  });
 
   const authz = useQuery({
-    queryKey: ["authz", claims ? authzSubject(claims) : null],
-    enabled: !!claims,
+    queryKey: ["authz", me.data?.email],
+    enabled: !!me.data,
     retry: false,
     queryFn: () =>
       checkAuthz({
-        user: authzSubject(claims!),
-        // `admin` on `tenant:platform` is the effective superadmin check:
-        // bootstrap_platform_superadmin + openfga_sync map the "superadmin"
-        // membership role to {member, admin, platform_admin} tuples (NOT a
-        // literal `superadmin` tuple), and only platform-tenant admins ever
-        // hold `admin` on `tenant:platform`. Until bootstrap also writes a
-        // `superadmin` tuple, check `admin` here.
-        relation: "admin",
+        user: `user:${me.data!.email}`,
+        relation: "superadmin",
         object_type: "tenant",
         object_id: "platform",
       }),
   });
 
   useEffect(() => {
-    if (!claims) {
-      redirectToLogin();
-      return;
-    }
-    if (authz.error instanceof AuthRequiredError) {
+    if (me.error instanceof AuthRequiredError || authz.error instanceof AuthRequiredError) {
       redirectToLogin();
     }
-  }, [claims, authz.error]);
+  }, [me.error, authz.error]);
 
-  if (!claims) return null;
-  if (authz.isLoading) return <p>Loading…</p>;
-  if (authz.error) return <p>Could not verify access. Try again.</p>;
+  if (me.isLoading || authz.isLoading) return <p>Loading…</p>;
+  if (me.error || authz.error) return <p>Could not verify access. Try again.</p>;
   if (authz.data === false) return <NoAccessPage />;
   if (authz.data === true) return <>{children}</>;
   return null;

@@ -1,3 +1,5 @@
+import { Logout } from "@/auth/Logout";
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -24,6 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           ADMIN
         </span>
+        <Logout />
       </header>
       <main style={{ flex: 1, padding: 24 }}>{children}</main>
     </div>

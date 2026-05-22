@@ -3,14 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-import { afterAll, afterEach, beforeAll, beforeEach, expect, test } from "vitest";
+import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
 import { MagicLinkConsumePage } from "./MagicLinkConsumePage";
-import { getToken } from "./tokenStorage";
 
 const server = setupServer();
 beforeAll(() => server.listen());
-beforeEach(() => localStorage.clear());
-afterEach(() => { server.resetHandlers(); localStorage.clear(); });
+afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 function wrap(path: string) {
@@ -19,22 +17,46 @@ function wrap(path: string) {
       <Routes>
         <Route path="/auth/consume" element={<MagicLinkConsumePage />} />
         <Route path="/tenants" element={<div data-testid="tenants">tenants page</div>} />
+        <Route path="/other" element={<div data-testid="other">other page</div>} />
       </Routes>
     </MemoryRouter>,
   );
 }
 
-test("clicking sign-in posts the token, stores access_token, and navigates", async () => {
+test("clicking sign-in POSTs with credentials:include and navigates on 200 even with empty body", async () => {
+  let capturedCredentials: string | undefined;
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/magic-link/consume", async ({ request }) => {
-      const body = await request.text();
-      expect(body).toBe("token=magic123");
-      return HttpResponse.json({ access_token: "JWT_TOKEN", token_type: "Bearer", expires_in: 300 });
+    http.post("https://auth.floofpark.app/api/v1/auth/magic-link/consume", ({ request }) => {
+      capturedCredentials = request.credentials;
+      // Return 200 with empty body (cookies are set by browser from Set-Cookie header)
+      return new HttpResponse(null, { status: 200 });
     }),
   );
   wrap("/auth/consume?token=magic123");
   await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
-  await waitFor(() => expect(getToken()).toBe("JWT_TOKEN"));
+  await waitFor(() => expect(screen.getByTestId("tenants")).toBeInTheDocument());
+  expect(capturedCredentials).toBe("include");
+});
+
+test("navigates to return_to path on success", async () => {
+  server.use(
+    http.post("https://auth.floofpark.app/api/v1/auth/magic-link/consume", () =>
+      new HttpResponse(null, { status: 200 }),
+    ),
+  );
+  wrap("/auth/consume?token=magic123&return_to=/other");
+  await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
+  await waitFor(() => expect(screen.getByTestId("other")).toBeInTheDocument());
+});
+
+test("protocol-relative open-redirect is rejected and falls back to /tenants", async () => {
+  server.use(
+    http.post("https://auth.floofpark.app/api/v1/auth/magic-link/consume", () =>
+      new HttpResponse(null, { status: 200 }),
+    ),
+  );
+  wrap("/auth/consume?token=magic123&return_to=//evil.com/steal");
+  await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
   await waitFor(() => expect(screen.getByTestId("tenants")).toBeInTheDocument());
 });
 
@@ -45,7 +67,9 @@ test("shows error when token is missing", () => {
 
 test("shows error when consume fails", async () => {
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/magic-link/consume", () => new HttpResponse(null, { status: 400 })),
+    http.post("https://auth.floofpark.app/api/v1/auth/magic-link/consume", () =>
+      new HttpResponse(null, { status: 400 }),
+    ),
   );
   wrap("/auth/consume?token=bad");
   await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
