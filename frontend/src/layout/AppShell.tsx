@@ -1,6 +1,14 @@
 import { Logout } from "@/auth/Logout";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+interface AppShellProps {
+  children: React.ReactNode;
+  /** Render the Logout button. Default true; set false on unauthenticated
+   * routes (/login, /auth/consume) where the user is by definition not
+   * logged in. */
+  authenticated?: boolean;
+}
+
+export function AppShell({ children, authenticated = true }: AppShellProps) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <header
@@ -26,7 +34,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           ADMIN
         </span>
-        <Logout />
+        {authenticated && <Logout />}
       </header>
       <main style={{ flex: 1, padding: 24 }}>{children}</main>
     </div>
