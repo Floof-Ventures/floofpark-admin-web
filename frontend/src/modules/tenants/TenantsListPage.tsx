@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { listTenants, type TenantType } from "@/api/tenants";
+import { CreateTenantForm } from "./CreateTenantForm";
 
 const BADGE_COLOR: Record<TenantType, string> = {
   business: "#0ea5e9",
@@ -13,6 +14,8 @@ const BADGE_COLOR: Record<TenantType, string> = {
 // type/state are server-side filters; display_name search is client-side.
 export function TenantsListPage() {
   const [search, setSearch] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["tenants"],
@@ -30,15 +33,50 @@ export function TenantsListPage() {
 
   return (
     <div>
-      <h1>Tenants</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1 style={{ margin: 0 }}>Tenants</h1>
+        <button type="button" onClick={() => setShowCreate(true)}>
+          Create Business Tenant
+        </button>
+      </div>
+      {toast && (
+        <div
+          role="status"
+          style={{
+            background: "#dcfce7",
+            color: "#166534",
+            padding: 12,
+            borderRadius: 6,
+            marginTop: 12,
+          }}
+        >
+          {toast}
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            style={{ marginLeft: 12 }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       <input
         type="search"
         placeholder="Search tenants…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        style={{ marginTop: 12 }}
       />
       {isLoading && <p>Loading…</p>}
       {error && <p role="alert">Failed to load tenants.</p>}
+      {showCreate && (
+        <CreateTenantForm
+          onClose={() => setShowCreate(false)}
+          onCreated={(name, email) =>
+            setToast(`Created ${name} — invite sent to ${email}`)
+          }
+        />
+      )}
       {data && (
         <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12 }}>
           <thead>
