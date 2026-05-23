@@ -9,7 +9,9 @@ export function Logout() {
     try {
       await fetch(LOGOUT_URL, { method: "POST", credentials: "include" });
     } finally {
-      window.location.assign("/login");
+      // replace (not assign) so back-button doesn't restore the prior
+      // authenticated page from bfcache while the cookie clear is in flight
+      window.location.replace("/login");
     }
   }
   return (

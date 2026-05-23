@@ -15,13 +15,13 @@ test("renders a Sign out button", () => {
   expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument();
 });
 
-test("clicking POSTs to /api/v1/auth/logout with credentials:include, then assigns /login", async () => {
+test("clicking POSTs to /api/v1/auth/logout with credentials:include, then replaces /login", async () => {
   const original = window.location;
-  const assignMock = vi.fn();
+  const replaceMock = vi.fn();
   // @ts-expect-error
   delete window.location;
   // @ts-expect-error
-  window.location = { ...original, assign: assignMock };
+  window.location = { ...original, replace: replaceMock };
 
   let capturedCredentials: string | undefined;
   server.use(
@@ -33,20 +33,20 @@ test("clicking POSTs to /api/v1/auth/logout with credentials:include, then assig
 
   render(<Logout />);
   await userEvent.click(screen.getByRole("button", { name: /sign out/i }));
-  await waitFor(() => expect(assignMock).toHaveBeenCalledWith("/login"));
+  await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/login"));
   expect(capturedCredentials).toBe("include");
 
   // @ts-expect-error restore
   window.location = original;
 });
 
-test("assigns /login even when logout fetch fails", async () => {
+test("replaces /login even when logout fetch fails", async () => {
   const original = window.location;
-  const assignMock = vi.fn();
+  const replaceMock = vi.fn();
   // @ts-expect-error
   delete window.location;
   // @ts-expect-error
-  window.location = { ...original, assign: assignMock };
+  window.location = { ...original, replace: replaceMock };
 
   server.use(
     http.post("https://auth.floofpark.app/api/v1/auth/logout", () =>
@@ -56,7 +56,7 @@ test("assigns /login even when logout fetch fails", async () => {
 
   render(<Logout />);
   await userEvent.click(screen.getByRole("button", { name: /sign out/i }));
-  await waitFor(() => expect(assignMock).toHaveBeenCalledWith("/login"));
+  await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/login"));
 
   // @ts-expect-error restore
   window.location = original;
