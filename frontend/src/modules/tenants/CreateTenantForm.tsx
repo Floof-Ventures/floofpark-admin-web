@@ -1,15 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  BUSINESS_CATEGORIES,
-  createBusinessTenant,
-  type BusinessCategory,
-} from "@/api/tenants";
+import { createBusinessTenant, type BusinessCategory } from "@/api/tenants";
 
 // users.id is VARCHAR(36) in tenant-identity — reject longer emails before
-// hitting the server (see memory feedback_users_id_varchar36).
+// hitting the server (see memory feedback_users_id_varchar36). The schema
+// widening is tracked separately; this guard surfaces the cap clearly.
 const MAX_OWNER_EMAIL_LEN = 36;
-
 const SLUG_PATTERN = /^[a-z0-9-]+$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -23,23 +19,48 @@ function slugify(s: string): string {
     .slice(0, 100);
 }
 
-const CATEGORY_LABEL: Record<BusinessCategory, string> = {
-  daycare: "Daycare",
-  boarding: "Boarding",
-  grooming: "Grooming",
-  training: "Training",
-  space_booking: "Space booking",
-  retail: "Retail",
-  rental: "Rental",
-  custom: "Custom",
-};
+const CATEGORY_OPTIONS: ReadonlyArray<{
+  value: BusinessCategory;
+  label: string;
+  blurb: string;
+}> = [
+  { value: "daycare", label: "Daycare", blurb: "Day-only animal care" },
+  { value: "boarding", label: "Boarding", blurb: "Overnight stays" },
+  { value: "grooming", label: "Grooming", blurb: "Bath, full groom, nails" },
+  { value: "training", label: "Training", blurb: "Group or 1-on-1 sessions" },
+  {
+    value: "space_booking",
+    label: "Space booking",
+    blurb: "Rents facility space to external customers",
+  },
+  { value: "retail", label: "Retail", blurb: "Sells physical goods" },
+  { value: "rental", label: "Rental", blurb: "Loans items that return" },
+  { value: "custom", label: "Custom", blurb: "Escape hatch for anything else" },
+];
 
 export interface CreateTenantFormProps {
   onClose: () => void;
   onCreated: (tenantDisplayName: string, ownerEmail: string) => void;
 }
 
-export function CreateTenantForm({ onClose, onCreated }: CreateTenantFormProps) {
+const inputClass =
+  "block w-full rounded-md px-3 py-2 text-sm transition " +
+  "border border-[var(--fp-border)] bg-[var(--fp-surface)] " +
+  "text-[var(--fp-text)] placeholder-[var(--fp-text-faint)] " +
+  "focus:outline-none focus:ring-2 focus:ring-[var(--fp-accent)] " +
+  "focus:border-[var(--fp-accent)]";
+
+const labelClass =
+  "block text-sm font-medium text-[var(--fp-text)] mb-1.5";
+
+const helperClass = "text-xs text-[var(--fp-text-muted)] mt-1";
+
+const errorClass = "text-xs text-[var(--fp-danger)] mt-1";
+
+export function CreateTenantForm({
+  onClose,
+  onCreated,
+}: CreateTenantFormProps) {
   const queryClient = useQueryClient();
   const [legalName, setLegalName] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -59,13 +80,12 @@ export function CreateTenantForm({ onClose, onCreated }: CreateTenantFormProps) 
     else if (!SLUG_PATTERN.test(effectiveSlug))
       errs.slug = "Lowercase letters, digits, and dashes only";
     if (categories.length === 0)
-      errs.categories = "Pick at least one";
+      errs.categories = "Pick at least one category";
     if (!ownerEmail.trim()) errs.invite_owner_email = "Required";
     else if (!EMAIL_PATTERN.test(ownerEmail.trim()))
       errs.invite_owner_email = "Enter a valid email";
     else if (ownerEmail.trim().length > MAX_OWNER_EMAIL_LEN)
-      errs.invite_owner_email =
-        `Owner email must be ≤ ${MAX_OWNER_EMAIL_LEN} chars (users.id cap)`;
+      errs.invite_owner_email = `Owner email must be ≤ ${MAX_OWNER_EMAIL_LEN} chars (users.id cap — widening pending)`;
     return errs;
   }, [legalName, displayName, effectiveSlug, categories, ownerEmail]);
 
@@ -98,6 +118,15 @@ export function CreateTenantForm({ onClose, onCreated }: CreateTenantFormProps) 
     mutation.mutate();
   }
 
+  // Escape closes the modal.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const showErr = (k: string) => submitted && validation[k];
 
   return (
@@ -108,12 +137,15 @@ export function CreateTenantForm({ onClose, onCreated }: CreateTenantFormProps) 
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.5)",
+        background: "var(--fp-overlay)",
         display: "flex",
         justifyContent: "center",
         alignItems: "flex-start",
-        paddingTop: 60,
+        paddingTop: 56,
+        paddingBottom: 32,
         zIndex: 50,
+        overflowY: "auto",
+        backdropFilter: "blur(2px)",
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -123,127 +155,277 @@ export function CreateTenantForm({ onClose, onCreated }: CreateTenantFormProps) 
         onSubmit={onSubmit}
         noValidate
         style={{
-          background: "white",
-          padding: 24,
-          borderRadius: 8,
-          width: "min(560px, 90vw)",
-          boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+          background: "var(--fp-surface)",
+          color: "var(--fp-text)",
+          border: "1px solid var(--fp-border)",
+          borderRadius: 12,
+          padding: 28,
+          width: "min(600px, 92vw)",
+          boxShadow: "0 24px 60px rgba(0, 0, 0, 0.35)",
         }}
       >
-        <h2 id="create-tenant-title" style={{ marginTop: 0 }}>
-          Create Business Tenant
-        </h2>
-        <p style={{ color: "#475569", fontSize: 13, marginTop: 4 }}>
-          A magic-link invite will be sent to the owner email. A default
-          "Main" location is auto-created.
-        </p>
-
-        <label style={{ display: "block", marginTop: 16 }}>
-          Legal name *
-          <input
-            value={legalName}
-            onChange={(e) => setLegalName(e.target.value)}
-            maxLength={255}
-            style={{ display: "block", width: "100%", marginTop: 4 }}
-          />
-          {showErr("legal_name") && (
-            <span role="alert" style={{ color: "#dc2626", fontSize: 12 }}>
-              {validation.legal_name}
-            </span>
-          )}
-        </label>
-
-        <label style={{ display: "block", marginTop: 12 }}>
-          Display name *
-          <input
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            maxLength={255}
-            style={{ display: "block", width: "100%", marginTop: 4 }}
-          />
-          {showErr("display_name") && (
-            <span role="alert" style={{ color: "#dc2626", fontSize: 12 }}>
-              {validation.display_name}
-            </span>
-          )}
-        </label>
-
-        <label style={{ display: "block", marginTop: 12 }}>
-          Slug *
-          <input
-            value={effectiveSlug}
-            onChange={(e) => {
-              setSlug(e.target.value);
-              setSlugEdited(true);
-            }}
-            maxLength={100}
-            style={{ display: "block", width: "100%", marginTop: 4 }}
-          />
-          {showErr("slug") && (
-            <span role="alert" style={{ color: "#dc2626", fontSize: 12 }}>
-              {validation.slug}
-            </span>
-          )}
-        </label>
-
-        <fieldset
+        <div
           style={{
-            marginTop: 12,
-            border: "1px solid #cbd5e1",
-            borderRadius: 6,
-            padding: 12,
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+            marginBottom: 4,
           }}
         >
-          <legend style={{ fontSize: 13 }}>Business categories *</legend>
-          <div
+          <h2
+            id="create-tenant-title"
+            className="fp-display"
+            style={{ margin: 0, fontSize: 22 }}
+          >
+            Create Business Tenant
+          </h2>
+          <span
+            className="fp-mono"
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-              gap: 6,
+              fontSize: 11,
+              color: "var(--fp-text-faint)",
+              letterSpacing: 0.4,
+              textTransform: "uppercase",
             }}
           >
-            {BUSINESS_CATEGORIES.map((c) => (
-              <label
-                key={c}
-                style={{ display: "flex", gap: 6, alignItems: "center" }}
-              >
-                <input
-                  type="checkbox"
-                  checked={categories.includes(c)}
-                  onChange={() => toggleCategory(c)}
-                />
-                {CATEGORY_LABEL[c]}
-              </label>
-            ))}
-          </div>
-          {showErr("categories") && (
-            <span role="alert" style={{ color: "#dc2626", fontSize: 12 }}>
-              {validation.categories}
-            </span>
-          )}
-        </fieldset>
-
-        <label style={{ display: "block", marginTop: 12 }}>
-          Owner email *{" "}
-          <span style={{ fontSize: 11, color: "#64748b" }}>
-            (max {MAX_OWNER_EMAIL_LEN} chars)
+            superadmin onboarding
           </span>
-          <input
-            type="email"
-            value={ownerEmail}
-            onChange={(e) => setOwnerEmail(e.target.value)}
-            maxLength={MAX_OWNER_EMAIL_LEN}
-            style={{ display: "block", width: "100%", marginTop: 4 }}
-          />
-          {showErr("invite_owner_email") && (
-            <span role="alert" style={{ color: "#dc2626", fontSize: 12 }}>
-              {validation.invite_owner_email}
-            </span>
-          )}
-        </label>
+        </div>
+        <p
+          style={{
+            color: "var(--fp-text-muted)",
+            fontSize: 13,
+            marginTop: 4,
+            marginBottom: 24,
+            lineHeight: 1.5,
+          }}
+        >
+          We'll auto-provision a default <code>Main</code> location and
+          email the owner a one-tap sign-in link to{" "}
+          <code>business.floofpark.com</code>. They become the tenant's
+          owner on link click.
+        </p>
+
+        <div style={{ display: "grid", gap: 14 }}>
+          <div>
+            <label htmlFor="ct-legal" className={labelClass}>
+              Legal name <Req />
+            </label>
+            <input
+              id="ct-legal"
+              className={inputClass}
+              value={legalName}
+              onChange={(e) => setLegalName(e.target.value)}
+              maxLength={255}
+              placeholder="Wolfie's Playland LLC"
+              autoFocus
+            />
+            <p className={helperClass}>
+              Registered legal entity name. Used on invoices and legal pages.
+            </p>
+            {showErr("legal_name") && (
+              <p role="alert" className={errorClass}>
+                {validation.legal_name}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="ct-display" className={labelClass}>
+              Display name <Req />
+            </label>
+            <input
+              id="ct-display"
+              className={inputClass}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              maxLength={255}
+              placeholder="Wolfie's Playland"
+            />
+            <p className={helperClass}>
+              What customers see. The slug is auto-derived from this.
+            </p>
+            {showErr("display_name") && (
+              <p role="alert" className={errorClass}>
+                {validation.display_name}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="ct-slug" className={labelClass}>
+              Slug <Req />
+            </label>
+            <input
+              id="ct-slug"
+              className={`${inputClass} fp-mono`}
+              value={effectiveSlug}
+              onChange={(e) => {
+                setSlug(e.target.value);
+                setSlugEdited(true);
+              }}
+              maxLength={100}
+              placeholder="wolfies-playland"
+            />
+            <p className={helperClass}>
+              URL-safe identifier. Letters, digits, dashes. Server returns 409
+              if already taken — pick a variant if so.
+            </p>
+            {showErr("slug") && (
+              <p role="alert" className={errorClass}>
+                {validation.slug}
+              </p>
+            )}
+          </div>
+
+          <fieldset
+            style={{
+              border: "1px solid var(--fp-border)",
+              borderRadius: 8,
+              padding: "12px 14px 14px",
+              margin: 0,
+              background: "var(--fp-surface-2)",
+            }}
+          >
+            <legend
+              style={{
+                padding: "0 6px",
+                fontSize: 13,
+                fontWeight: 500,
+                color: "var(--fp-text)",
+              }}
+            >
+              Business categories <Req />
+            </legend>
+            <p
+              style={{
+                fontSize: 12,
+                color: "var(--fp-text-muted)",
+                marginTop: 2,
+                marginBottom: 10,
+                lineHeight: 1.5,
+              }}
+            >
+              The kinds of offerings this business plans to run. Owner can
+              add or remove later in Settings; this is just the seed list
+              for sales context.
+            </p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fill, minmax(180px, 1fr))",
+                gap: 8,
+              }}
+            >
+              {CATEGORY_OPTIONS.map((opt) => {
+                const active = categories.includes(opt.value);
+                return (
+                  <label
+                    key={opt.value}
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "flex-start",
+                      padding: "8px 10px",
+                      borderRadius: 6,
+                      border: `1px solid ${
+                        active ? "var(--fp-accent)" : "var(--fp-border)"
+                      }`,
+                      background: active
+                        ? "color-mix(in srgb, var(--fp-accent) 12%, var(--fp-surface))"
+                        : "var(--fp-surface)",
+                      cursor: "pointer",
+                      transition: "all 120ms",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={active}
+                      onChange={() => toggleCategory(opt.value)}
+                      style={{ marginTop: 2, accentColor: "var(--fp-accent)" }}
+                    />
+                    <span style={{ display: "block" }}>
+                      <span
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: "var(--fp-text)",
+                        }}
+                      >
+                        {opt.label}
+                      </span>
+                      <span
+                        style={{
+                          display: "block",
+                          fontSize: 11,
+                          color: "var(--fp-text-muted)",
+                          marginTop: 2,
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {opt.blurb}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            {showErr("categories") && (
+              <p role="alert" className={errorClass} style={{ marginTop: 10 }}>
+                {validation.categories}
+              </p>
+            )}
+          </fieldset>
+
+          <div>
+            <label htmlFor="ct-email" className={labelClass}>
+              Owner email <Req />
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "var(--fp-text-faint)",
+                  marginLeft: 6,
+                  fontWeight: 400,
+                }}
+              >
+                (max {MAX_OWNER_EMAIL_LEN} chars · widening pending)
+              </span>
+            </label>
+            <input
+              id="ct-email"
+              type="email"
+              className={inputClass}
+              value={ownerEmail}
+              onChange={(e) => setOwnerEmail(e.target.value)}
+              maxLength={MAX_OWNER_EMAIL_LEN}
+              placeholder="owner@wolfies.example"
+            />
+            <p className={helperClass}>
+              Receives a magic-link invite. After clicking, lands on{" "}
+              <code>business.floofpark.com</code> as the tenant owner.
+            </p>
+            {showErr("invite_owner_email") && (
+              <p role="alert" className={errorClass}>
+                {validation.invite_owner_email}
+              </p>
+            )}
+          </div>
+        </div>
 
         {mutation.isError && (
-          <p role="alert" style={{ color: "#dc2626", marginTop: 12 }}>
+          <p
+            role="alert"
+            style={{
+              color: "var(--fp-danger)",
+              fontSize: 13,
+              marginTop: 16,
+              padding: "8px 12px",
+              border: "1px solid var(--fp-danger)",
+              borderRadius: 6,
+              background: "color-mix(in srgb, var(--fp-danger) 8%, transparent)",
+            }}
+          >
             Failed to create tenant: {(mutation.error as Error).message}
           </p>
         )}
@@ -253,17 +435,60 @@ export function CreateTenantForm({ onClose, onCreated }: CreateTenantFormProps) 
             display: "flex",
             justifyContent: "flex-end",
             gap: 8,
-            marginTop: 20,
+            marginTop: 24,
           }}
         >
-          <button type="button" onClick={onClose}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              padding: "8px 14px",
+              borderRadius: 6,
+              border: "1px solid var(--fp-border)",
+              background: "transparent",
+              color: "var(--fp-text-muted)",
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
             Cancel
           </button>
-          <button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? "Creating…" : "Create tenant"}
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 6,
+              border: "1px solid var(--fp-accent)",
+              background: "var(--fp-accent)",
+              color: "var(--fp-accent-fg)",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: mutation.isPending ? "wait" : "pointer",
+              opacity: mutation.isPending ? 0.7 : 1,
+              transition: "background 120ms",
+            }}
+          >
+            {mutation.isPending ? "Creating…" : "Create tenant + send invite"}
           </button>
         </div>
       </form>
     </div>
+  );
+}
+
+function Req() {
+  return (
+    <span
+      aria-hidden
+      style={{
+        color: "var(--fp-accent)",
+        fontWeight: 500,
+        marginLeft: 2,
+      }}
+    >
+      *
+    </span>
   );
 }

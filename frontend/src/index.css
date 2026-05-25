@@ -1,4 +1,57 @@
 @import "tailwindcss";
 
-:root { color-scheme: light dark; }
-body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+/* Admin tool palette — restrained, warm-amber accent so it reads visually
+   distinct from customer-facing (business/app) surfaces. Tokens cover both
+   light and dark contexts via prefers-color-scheme. */
+:root {
+  color-scheme: light dark;
+  --fp-bg: #fafaf9;
+  --fp-surface: #ffffff;
+  --fp-surface-2: #f4f4f3;
+  --fp-border: #e7e5e4;
+  --fp-text: #1c1917;
+  --fp-text-muted: #57534e;
+  --fp-text-faint: #a8a29e;
+  --fp-accent: #d97706;
+  --fp-accent-fg: #fffbeb;
+  --fp-accent-hover: #b45309;
+  --fp-danger: #b91c1c;
+  --fp-success-bg: #ecfdf5;
+  --fp-success-fg: #064e3b;
+  --fp-overlay: rgba(28, 25, 23, 0.55);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fp-bg: #0c0a09;
+    --fp-surface: #1c1917;
+    --fp-surface-2: #292524;
+    --fp-border: #44403c;
+    --fp-text: #fafaf9;
+    --fp-text-muted: #a8a29e;
+    --fp-text-faint: #57534e;
+    --fp-accent: #fbbf24;
+    --fp-accent-fg: #0c0a09;
+    --fp-accent-hover: #f59e0b;
+    --fp-danger: #f87171;
+    --fp-success-bg: #022c22;
+    --fp-success-fg: #6ee7b7;
+    --fp-overlay: rgba(0, 0, 0, 0.7);
+  }
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--fp-bg);
+  color: var(--fp-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+code, kbd, samp, .fp-mono {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+}
+
+.fp-display {
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}

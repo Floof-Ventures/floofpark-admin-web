@@ -4,14 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { listTenants, type TenantType } from "@/api/tenants";
 import { CreateTenantForm } from "./CreateTenantForm";
 
-const BADGE_COLOR: Record<TenantType, string> = {
-  business: "#0ea5e9",
-  household: "#10b981",
-  platform: "#a855f7",
+const BADGE: Record<TenantType, { bg: string; fg: string }> = {
+  business: { bg: "#0369a1", fg: "#f0f9ff" },
+  household: { bg: "#047857", fg: "#ecfdf5" },
+  platform: { bg: "#7e22ce", fg: "#faf5ff" },
 };
 
-// The real tenant-identity API has no server-side text search.
-// type/state are server-side filters; display_name search is client-side.
 export function TenantsListPage() {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -32,43 +30,130 @@ export function TenantsListPage() {
   }, [data, search]);
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 style={{ margin: 0 }}>Tenants</h1>
-        <button type="button" onClick={() => setShowCreate(true)}>
+    <div
+      style={{
+        maxWidth: 1100,
+        margin: "0 auto",
+        padding: "32px 24px 64px",
+      }}
+    >
+      <header
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          gap: 16,
+          marginBottom: 20,
+        }}
+      >
+        <div>
+          <p
+            className="fp-mono"
+            style={{
+              margin: 0,
+              fontSize: 11,
+              letterSpacing: 0.5,
+              textTransform: "uppercase",
+              color: "var(--fp-text-faint)",
+            }}
+          >
+            Superadmin
+          </p>
+          <h1
+            className="fp-display"
+            style={{ margin: "2px 0 0", fontSize: 28 }}
+          >
+            Tenants
+          </h1>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowCreate(true)}
+          style={{
+            padding: "9px 16px",
+            borderRadius: 6,
+            border: "1px solid var(--fp-accent)",
+            background: "var(--fp-accent)",
+            color: "var(--fp-accent-fg)",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "background 120ms",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--fp-accent-hover)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "var(--fp-accent)";
+          }}
+        >
+          <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>+</span>
           Create Business Tenant
         </button>
-      </div>
+      </header>
+
       {toast && (
         <div
           role="status"
           style={{
-            background: "#dcfce7",
-            color: "#166534",
-            padding: 12,
-            borderRadius: 6,
-            marginTop: 12,
+            background: "var(--fp-success-bg)",
+            color: "var(--fp-success-fg)",
+            padding: "10px 14px",
+            borderRadius: 8,
+            marginBottom: 16,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            border: "1px solid color-mix(in srgb, var(--fp-success-fg) 30%, transparent)",
           }}
         >
-          {toast}
+          <span style={{ fontSize: 13 }}>{toast}</span>
           <button
             type="button"
             onClick={() => setToast(null)}
-            style={{ marginLeft: 12 }}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "inherit",
+              fontSize: 12,
+              cursor: "pointer",
+              textDecoration: "underline",
+            }}
           >
             Dismiss
           </button>
         </div>
       )}
+
       <input
         type="search"
-        placeholder="Search tenants…"
+        placeholder="Search tenants by display name…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        style={{ marginTop: 12 }}
+        style={{
+          width: "100%",
+          padding: "10px 14px",
+          borderRadius: 6,
+          border: "1px solid var(--fp-border)",
+          background: "var(--fp-surface)",
+          color: "var(--fp-text)",
+          fontSize: 14,
+          marginBottom: 16,
+        }}
       />
-      {isLoading && <p>Loading…</p>}
-      {error && <p role="alert">Failed to load tenants.</p>}
+
+      {isLoading && (
+        <p style={{ color: "var(--fp-text-muted)", fontSize: 13 }}>Loading…</p>
+      )}
+      {error && (
+        <p role="alert" style={{ color: "var(--fp-danger)", fontSize: 13 }}>
+          Failed to load tenants.
+        </p>
+      )}
+
       {showCreate && (
         <CreateTenantForm
           onClose={() => setShowCreate(false)}
@@ -77,42 +162,112 @@ export function TenantsListPage() {
           }
         />
       )}
+
       {data && (
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12 }}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: "left" }}>Name</th>
-              <th style={{ textAlign: "left" }}>Type</th>
-              <th style={{ textAlign: "left" }}>State</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((t) => (
-              <tr key={t.id} style={{ borderTop: "1px solid #e5e7eb" }}>
-                <td>
-                  <Link to={`/tenants/${t.id}`}>{t.display_name}</Link>
-                </td>
-                <td>
-                  <span
+        <div
+          style={{
+            border: "1px solid var(--fp-border)",
+            borderRadius: 8,
+            overflow: "hidden",
+            background: "var(--fp-surface)",
+          }}
+        >
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: 13,
+            }}
+          >
+            <thead>
+              <tr style={{ background: "var(--fp-surface-2)" }}>
+                <Th>Name</Th>
+                <Th>Type</Th>
+                <Th>State</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((t) => (
+                <tr
+                  key={t.id}
+                  style={{ borderTop: "1px solid var(--fp-border)" }}
+                >
+                  <Td>
+                    <Link
+                      to={`/tenants/${t.id}`}
+                      style={{
+                        color: "var(--fp-text)",
+                        textDecoration: "none",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {t.display_name}
+                    </Link>
+                  </Td>
+                  <Td>
+                    <span
+                      style={{
+                        background: BADGE[t.type].bg,
+                        color: BADGE[t.type].fg,
+                        padding: "2px 8px",
+                        borderRadius: 999,
+                        fontSize: 10.5,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {t.type}
+                    </span>
+                  </Td>
+                  <Td>
+                    <span style={{ color: "var(--fp-text-muted)" }}>
+                      {t.state}
+                    </span>
+                  </Td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={3}
                     style={{
-                      background: BADGE_COLOR[t.type],
-                      color: "white",
-                      padding: "2px 8px",
-                      borderRadius: 999,
-                      fontSize: 11,
-                      textTransform: "uppercase",
-                      letterSpacing: 0.4,
+                      padding: 24,
+                      textAlign: "center",
+                      color: "var(--fp-text-muted)",
+                      fontSize: 13,
                     }}
                   >
-                    {t.type}
-                  </span>
-                </td>
-                <td>{t.state}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    No tenants match.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
+}
+
+function Th({ children }: { children: React.ReactNode }) {
+  return (
+    <th
+      style={{
+        textAlign: "left",
+        padding: "10px 14px",
+        fontSize: 11,
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
+        color: "var(--fp-text-muted)",
+        fontWeight: 500,
+      }}
+    >
+      {children}
+    </th>
+  );
+}
+
+function Td({ children }: { children: React.ReactNode }) {
+  return <td style={{ padding: "10px 14px" }}>{children}</td>;
 }

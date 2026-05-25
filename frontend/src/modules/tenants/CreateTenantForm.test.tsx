@@ -36,7 +36,9 @@ test("renders all required fields", () => {
     "Rental",
     "Custom",
   ]) {
-    expect(screen.getByLabelText(c)).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: new RegExp(c) }),
+    ).toBeInTheDocument();
   }
 });
 
@@ -68,7 +70,7 @@ test("rejects email over 36 chars (users.id cap)", async () => {
   await userEvent.type(inputs[0], "Acme LLC");
   await userEvent.type(inputs[1], "Acme");
   // slug auto-derives
-  await userEvent.click(screen.getByLabelText("Daycare"));
+  await userEvent.click(screen.getByRole("checkbox", { name: /Daycare/ }));
   // The email input has maxLength=36 so the browser caps it during typing.
   // To assert our validation message, write via fireEvent-style direct set:
   const emailInput = screen.getByLabelText(/Owner email/i) as HTMLInputElement;
@@ -85,7 +87,7 @@ test("rejects invalid email format", async () => {
   const inputs = screen.getAllByRole("textbox");
   await userEvent.type(inputs[0], "Acme LLC");
   await userEvent.type(inputs[1], "Acme");
-  await userEvent.click(screen.getByLabelText("Daycare"));
+  await userEvent.click(screen.getByRole("checkbox", { name: /Daycare/ }));
   await userEvent.type(screen.getByLabelText(/Owner email/i), "not-an-email");
   await userEvent.click(screen.getByRole("button", { name: /create tenant/i }));
   expect(screen.getByText(/valid email/i)).toBeInTheDocument();
@@ -119,8 +121,8 @@ test("submits with multi-select categories and calls onCreated/onClose", async (
   const inputs = screen.getAllByRole("textbox");
   await userEvent.type(inputs[0], "Pawsome LLC");
   await userEvent.type(inputs[1], "Pawsome");
-  await userEvent.click(screen.getByLabelText("Daycare"));
-  await userEvent.click(screen.getByLabelText("Boarding"));
+  await userEvent.click(screen.getByRole("checkbox", { name: /Daycare/ }));
+  await userEvent.click(screen.getByRole("checkbox", { name: /Boarding/ }));
   await userEvent.type(screen.getByLabelText(/Owner email/i), "owner@px.co");
   await userEvent.click(screen.getByRole("button", { name: /create tenant/i }));
 
@@ -150,7 +152,7 @@ test("surfaces 4xx error message", async () => {
   const inputs = screen.getAllByRole("textbox");
   await userEvent.type(inputs[0], "X");
   await userEvent.type(inputs[1], "X");
-  await userEvent.click(screen.getByLabelText("Daycare"));
+  await userEvent.click(screen.getByRole("checkbox", { name: /Daycare/ }));
   await userEvent.type(screen.getByLabelText(/Owner email/i), "o@p.co");
   await userEvent.click(screen.getByRole("button", { name: /create tenant/i }));
   await waitFor(() =>
