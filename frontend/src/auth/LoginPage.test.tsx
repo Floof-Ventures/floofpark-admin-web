@@ -13,7 +13,7 @@ afterAll(() => server.close());
 test("submitting a valid email posts to magic-link/request with admin host", async () => {
   let body: Record<string, unknown> | null = null;
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/magic-link/request", async ({ request }) => {
+    http.post("https://auth.floofpark.com/api/v1/auth/magic-link/request", async ({ request }) => {
       body = (await request.json()) as Record<string, unknown>;
       return HttpResponse.json({ delivery: "sent" });
     }),

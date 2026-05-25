@@ -16,7 +16,7 @@ beforeEach(async () => {
 test("POSTs to /refresh with credentials:include and returns true on 204", async () => {
   let capturedCredentials: string | undefined;
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/refresh", ({ request }) => {
+    http.post("https://auth.floofpark.com/api/v1/auth/refresh", ({ request }) => {
       capturedCredentials = request.credentials;
       return new HttpResponse(null, { status: 204 });
     }),
@@ -28,7 +28,7 @@ test("POSTs to /refresh with credentials:include and returns true on 204", async
 
 test("returns false on 401", async () => {
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/refresh", () =>
+    http.post("https://auth.floofpark.com/api/v1/auth/refresh", () =>
       new HttpResponse(null, { status: 401 }),
     ),
   );
@@ -39,7 +39,7 @@ test("returns false on 401", async () => {
 test("concurrent calls share the same in-flight promise", async () => {
   let callCount = 0;
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/refresh", async () => {
+    http.post("https://auth.floofpark.com/api/v1/auth/refresh", async () => {
       callCount++;
       // small delay to keep inflight window open
       await new Promise((r) => setTimeout(r, 10));
@@ -55,7 +55,7 @@ test("concurrent calls share the same in-flight promise", async () => {
 
 test("returns false when fetch throws (network error)", async () => {
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/refresh", () => {
+    http.post("https://auth.floofpark.com/api/v1/auth/refresh", () => {
       throw new Error("network down");
     }),
   );

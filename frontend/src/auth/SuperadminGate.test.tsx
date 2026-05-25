@@ -17,10 +17,10 @@ function wrap(ui: React.ReactNode) {
 
 test("renders children when /me + /authz both succeed", async () => {
   server.use(
-    http.get("https://auth.floofpark.app/api/v1/auth/me", () =>
+    http.get("https://auth.floofpark.com/api/v1/auth/me", () =>
       HttpResponse.json({ email: "z@floof.ventures", user_id: null }),
     ),
-    http.post("https://auth.floofpark.app/api/v1/authz/check", () =>
+    http.post("https://auth.floofpark.com/api/v1/authz/check", () =>
       HttpResponse.json({ allowed: true }),
     ),
   );
@@ -30,10 +30,10 @@ test("renders children when /me + /authz both succeed", async () => {
 
 test("renders NoAccessPage when /authz denies", async () => {
   server.use(
-    http.get("https://auth.floofpark.app/api/v1/auth/me", () =>
+    http.get("https://auth.floofpark.com/api/v1/auth/me", () =>
       HttpResponse.json({ email: "z@floof.ventures", user_id: null }),
     ),
-    http.post("https://auth.floofpark.app/api/v1/authz/check", () =>
+    http.post("https://auth.floofpark.com/api/v1/authz/check", () =>
       HttpResponse.json({ allowed: false }),
     ),
   );
@@ -50,8 +50,8 @@ test("redirects to login when /me 401s and refresh also fails", async () => {
   window.location = { ...original, assign: assignMock, href: "https://admin.floofpark.com/tenants" };
 
   server.use(
-    http.get("https://auth.floofpark.app/api/v1/auth/me", () => new HttpResponse(null, { status: 401 })),
-    http.post("https://auth.floofpark.app/api/v1/auth/refresh", () => new HttpResponse(null, { status: 401 })),
+    http.get("https://auth.floofpark.com/api/v1/auth/me", () => new HttpResponse(null, { status: 401 })),
+    http.post("https://auth.floofpark.com/api/v1/auth/refresh", () => new HttpResponse(null, { status: 401 })),
   );
   wrap(<SuperadminGate><div>inner</div></SuperadminGate>);
   await waitFor(() => expect(assignMock).toHaveBeenCalled());
@@ -63,10 +63,10 @@ test("redirects to login when /me 401s and refresh also fails", async () => {
 test("uses email as authz subject", async () => {
   let observed: string | undefined;
   server.use(
-    http.get("https://auth.floofpark.app/api/v1/auth/me", () =>
+    http.get("https://auth.floofpark.com/api/v1/auth/me", () =>
       HttpResponse.json({ email: "z@floof.ventures", user_id: null }),
     ),
-    http.post("https://auth.floofpark.app/api/v1/authz/check", async ({ request }) => {
+    http.post("https://auth.floofpark.com/api/v1/authz/check", async ({ request }) => {
       const body = (await request.json()) as { user: string; relation: string };
       observed = `${body.user}#${body.relation}`;
       return HttpResponse.json({ allowed: true });

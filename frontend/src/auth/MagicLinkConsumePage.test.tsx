@@ -26,7 +26,7 @@ function wrap(path: string) {
 test("clicking sign-in POSTs with credentials:include and navigates on 200 even with empty body", async () => {
   let capturedCredentials: string | undefined;
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/magic-link/consume", ({ request }) => {
+    http.post("https://auth.floofpark.com/api/v1/auth/magic-link/consume", ({ request }) => {
       capturedCredentials = request.credentials;
       // Return 200 with empty body (cookies are set by browser from Set-Cookie header)
       return new HttpResponse(null, { status: 200 });
@@ -40,7 +40,7 @@ test("clicking sign-in POSTs with credentials:include and navigates on 200 even 
 
 test("navigates to return_to path on success", async () => {
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/magic-link/consume", () =>
+    http.post("https://auth.floofpark.com/api/v1/auth/magic-link/consume", () =>
       new HttpResponse(null, { status: 200 }),
     ),
   );
@@ -51,7 +51,7 @@ test("navigates to return_to path on success", async () => {
 
 test("protocol-relative open-redirect is rejected and falls back to /tenants", async () => {
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/magic-link/consume", () =>
+    http.post("https://auth.floofpark.com/api/v1/auth/magic-link/consume", () =>
       new HttpResponse(null, { status: 200 }),
     ),
   );
@@ -67,7 +67,7 @@ test("shows error when token is missing", () => {
 
 test("shows error when consume fails", async () => {
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/magic-link/consume", () =>
+    http.post("https://auth.floofpark.com/api/v1/auth/magic-link/consume", () =>
       new HttpResponse(null, { status: 400 }),
     ),
   );

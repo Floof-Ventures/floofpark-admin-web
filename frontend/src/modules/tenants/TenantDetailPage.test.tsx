@@ -39,7 +39,7 @@ const TENANT = {
 
 test("shows tenant header with id, name, and type", async () => {
   server.use(
-    http.get("https://tenants.floofpark.app/api/v1/tenants/t1", () =>
+    http.get("https://tenants.floofpark.com/api/v1/tenants/t1", () =>
       HttpResponse.json(TENANT),
     ),
   );
@@ -53,7 +53,7 @@ test("shows tenant header with id, name, and type", async () => {
 
 test("shows a 'members coming in Wave 0.5' placeholder", async () => {
   server.use(
-    http.get("https://tenants.floofpark.app/api/v1/tenants/t1", () =>
+    http.get("https://tenants.floofpark.com/api/v1/tenants/t1", () =>
       HttpResponse.json(TENANT),
     ),
   );

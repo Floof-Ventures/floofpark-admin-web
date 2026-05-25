@@ -97,7 +97,7 @@ test("submits with multi-select categories and calls onCreated/onClose", async (
   let bodyReceived: Record<string, unknown> | null = null;
   server.use(
     http.post(
-      "https://tenants.floofpark.app/api/v1/tenants",
+      "https://tenants.floofpark.com/api/v1/tenants",
       async ({ request }) => {
         bodyReceived = (await request.json()) as Record<string, unknown>;
         return HttpResponse.json({
@@ -141,7 +141,7 @@ test("submits with multi-select categories and calls onCreated/onClose", async (
 test("surfaces 4xx error message", async () => {
   server.use(
     http.post(
-      "https://tenants.floofpark.app/api/v1/tenants",
+      "https://tenants.floofpark.com/api/v1/tenants",
       () =>
         new HttpResponse(JSON.stringify({ detail: "slug_taken" }), {
           status: 409,

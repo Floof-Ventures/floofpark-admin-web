@@ -12,7 +12,7 @@ afterAll(() => server.close());
 test("calls GET /api/v1/auth/me with credentials:include and returns the parsed body on 200", async () => {
   let capturedCredentials: string | undefined;
   server.use(
-    http.get("https://auth.floofpark.app/api/v1/auth/me", ({ request }) => {
+    http.get("https://auth.floofpark.com/api/v1/auth/me", ({ request }) => {
       capturedCredentials = request.credentials;
       return HttpResponse.json({ email: "z@floof.ventures", user_id: null });
     }),
@@ -24,10 +24,10 @@ test("calls GET /api/v1/auth/me with credentials:include and returns the parsed 
 
 test("throws AuthRequiredError on 401 after refresh also fails", async () => {
   server.use(
-    http.get("https://auth.floofpark.app/api/v1/auth/me", () =>
+    http.get("https://auth.floofpark.com/api/v1/auth/me", () =>
       new HttpResponse(null, { status: 401 }),
     ),
-    http.post("https://auth.floofpark.app/api/v1/auth/refresh", () =>
+    http.post("https://auth.floofpark.com/api/v1/auth/refresh", () =>
       new HttpResponse(null, { status: 401 }),
     ),
   );

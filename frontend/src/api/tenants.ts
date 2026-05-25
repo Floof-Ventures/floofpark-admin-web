@@ -22,7 +22,7 @@ export interface TenantsPage {
   next_cursor: string | null;
 }
 
-const BASE = "https://tenants.floofpark.app/api/v1/tenants";
+const BASE = "https://tenants.floofpark.com/api/v1/tenants";
 
 export async function listTenants(
   params: { limit?: number; cursor?: string; type?: TenantType; state?: TenantState } = {},

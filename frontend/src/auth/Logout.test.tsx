@@ -25,7 +25,7 @@ test("clicking POSTs to /api/v1/auth/logout with credentials:include, then repla
 
   let capturedCredentials: string | undefined;
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/logout", ({ request }) => {
+    http.post("https://auth.floofpark.com/api/v1/auth/logout", ({ request }) => {
       capturedCredentials = request.credentials;
       return new HttpResponse(null, { status: 204 });
     }),
@@ -49,7 +49,7 @@ test("replaces /login even when logout fetch fails", async () => {
   window.location = { ...original, replace: replaceMock };
 
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/auth/logout", () =>
+    http.post("https://auth.floofpark.com/api/v1/auth/logout", () =>
       new HttpResponse(null, { status: 500 }),
     ),
   );

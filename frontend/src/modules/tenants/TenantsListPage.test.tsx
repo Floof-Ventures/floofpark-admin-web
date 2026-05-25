@@ -57,7 +57,7 @@ const TENANTS_RESPONSE = {
 
 test("renders tenants with type badges and a search field", async () => {
   server.use(
-    http.get("https://tenants.floofpark.app/api/v1/tenants", () =>
+    http.get("https://tenants.floofpark.com/api/v1/tenants", () =>
       HttpResponse.json(TENANTS_RESPONSE),
     ),
   );
@@ -70,7 +70,7 @@ test("renders tenants with type badges and a search field", async () => {
 
 test("search input filters displayed rows client-side", async () => {
   server.use(
-    http.get("https://tenants.floofpark.app/api/v1/tenants", () =>
+    http.get("https://tenants.floofpark.com/api/v1/tenants", () =>
       HttpResponse.json(TENANTS_RESPONSE),
     ),
   );

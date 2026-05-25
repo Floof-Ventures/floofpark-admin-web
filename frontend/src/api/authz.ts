@@ -9,7 +9,7 @@ export interface AuthzCheckTuple {
 
 export async function checkAuthz(tuple: AuthzCheckTuple): Promise<boolean> {
   const result = await apiFetch<{ allowed: boolean }>(
-    "https://auth.floofpark.app/api/v1/authz/check",
+    "https://auth.floofpark.com/api/v1/authz/check",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

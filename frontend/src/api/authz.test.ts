@@ -12,7 +12,7 @@ afterAll(() => server.close());
 test("checkAuthz posts the tuple to /api/v1/authz/check and returns allowed flag", async () => {
   let body: Record<string, unknown> | null = null;
   server.use(
-    http.post("https://auth.floofpark.app/api/v1/authz/check", async ({ request }) => {
+    http.post("https://auth.floofpark.com/api/v1/authz/check", async ({ request }) => {
       body = (await request.json()) as Record<string, unknown>;
       return HttpResponse.json({ allowed: true });
     }),

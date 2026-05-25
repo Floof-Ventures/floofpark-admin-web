@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const LOGOUT_URL = "https://auth.floofpark.app/api/v1/auth/logout";
+const LOGOUT_URL = "https://auth.floofpark.com/api/v1/auth/logout";
 
 export function Logout() {
   const [busy, setBusy] = useState(false);

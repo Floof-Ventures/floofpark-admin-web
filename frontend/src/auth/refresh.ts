@@ -1,4 +1,4 @@
-const REFRESH_URL = "https://auth.floofpark.app/api/v1/auth/refresh";
+const REFRESH_URL = "https://auth.floofpark.com/api/v1/auth/refresh";
 
 let inflight: Promise<boolean> | null = null;
 

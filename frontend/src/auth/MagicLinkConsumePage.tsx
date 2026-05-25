@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
-const CONSUME_URL = "https://auth.floofpark.app/api/v1/auth/magic-link/consume";
+const CONSUME_URL = "https://auth.floofpark.com/api/v1/auth/magic-link/consume";
 
 export function MagicLinkConsumePage() {
   const [params] = useSearchParams();

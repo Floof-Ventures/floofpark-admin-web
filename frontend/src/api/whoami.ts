@@ -6,5 +6,5 @@ export interface CurrentUser {
 }
 
 export function whoami(): Promise<CurrentUser> {
-  return apiFetch<CurrentUser>("https://auth.floofpark.app/api/v1/auth/me");
+  return apiFetch<CurrentUser>("https://auth.floofpark.com/api/v1/auth/me");
 }

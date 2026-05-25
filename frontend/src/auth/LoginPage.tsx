@@ -10,7 +10,7 @@ export function LoginPage() {
     e.preventDefault();
     setError(null);
     try {
-      await apiFetch("https://auth.floofpark.app/api/v1/auth/magic-link/request", {
+      await apiFetch("https://auth.floofpark.com/api/v1/auth/magic-link/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, redirect_to_host: "admin.floofpark.com" }),

@@ -21,13 +21,13 @@ test("ungated /login route renders the email form inside AppShell", () => {
 test("gated /tenants route renders list when superadmin is allowed", async () => {
   window.history.pushState({}, "", "/tenants");
   server.use(
-    http.get("https://auth.floofpark.app/api/v1/auth/me", () =>
+    http.get("https://auth.floofpark.com/api/v1/auth/me", () =>
       HttpResponse.json({ email: "z@floof.ventures", user_id: null }),
     ),
-    http.post("https://auth.floofpark.app/api/v1/authz/check", () =>
+    http.post("https://auth.floofpark.com/api/v1/authz/check", () =>
       HttpResponse.json({ allowed: true }),
     ),
-    http.get("https://tenants.floofpark.app/api/v1/tenants", () =>
+    http.get("https://tenants.floofpark.com/api/v1/tenants", () =>
       HttpResponse.json({ tenants: [], next_cursor: null }),
     ),
   );
