@@ -40,6 +40,33 @@ export async function getTenant(id: string): Promise<Tenant> {
   return apiFetch<Tenant>(`${BASE}/${id}`);
 }
 
+export type MembershipRole = "owner" | "admin" | "member" | string;
+export type MembershipState =
+  | "invited"
+  | "active"
+  | "suspended"
+  | "removed"
+  | string;
+
+export interface Membership {
+  id: string;
+  user_id: string;
+  tenant_id: string;
+  role: MembershipRole;
+  state: MembershipState;
+  joined_at: string | null;
+  invited_at: string | null;
+  removed_at: string | null;
+  user: { id: string; email: string; display_name: string | null } | null;
+}
+
+export async function listMemberships(tenantId: string): Promise<Membership[]> {
+  const r = await apiFetch<{ memberships: Membership[] }>(
+    `${BASE}/${tenantId}/memberships`,
+  );
+  return r.memberships;
+}
+
 // Mirrors floofpark-offerings spec §6.2 type registry; superadmin picks
 // the types the new business plans to offer at onboarding. The list isn't
 // load-bearing — the owner adds/removes offerings later via business-web.
