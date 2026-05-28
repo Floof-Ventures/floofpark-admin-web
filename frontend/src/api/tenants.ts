@@ -14,6 +14,7 @@ export interface Tenant {
   suspended_until: string | null;
   suspension_reason: string | null;
   created_at: string;
+  metadata: { business_categories?: BusinessCategory[] } | null;
 }
 
 // Real API shape: { tenants: Tenant[], next_cursor: string | null }

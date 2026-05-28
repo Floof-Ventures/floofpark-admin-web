@@ -35,6 +35,7 @@ const TENANT = {
   suspended_until: null,
   suspension_reason: null,
   created_at: "2026-01-01T00:00:00",
+  metadata: { business_categories: ["daycare", "boarding"] },
 };
 
 test("shows tenant header with id, name, and type", async () => {
@@ -59,4 +60,34 @@ test("shows a 'members coming in Wave 0.5' placeholder", async () => {
   );
   wrap("/tenants/t1");
   expect(await screen.findByText(/members coming in wave 0\.5/i)).toBeInTheDocument();
+});
+
+test("renders slug, created_at, and business_categories chips", async () => {
+  server.use(
+    http.get("https://tenants.floofpark.com/api/v1/tenants/t1", () =>
+      HttpResponse.json(TENANT),
+    ),
+  );
+  wrap("/tenants/t1");
+  await waitFor(() =>
+    expect(screen.getByRole("heading", { name: "Acme Vet" })).toBeInTheDocument(),
+  );
+  expect(screen.getByText("acme-vet")).toBeInTheDocument();
+  // created_at "2026-01-01T00:00:00" → "2026-01-01" minimum
+  expect(screen.getByText(/2026-01-01/)).toBeInTheDocument();
+  expect(screen.getByText(/Daycare/i)).toBeInTheDocument();
+  expect(screen.getByText(/Boarding/i)).toBeInTheDocument();
+});
+
+test("hides categories section when metadata is null", async () => {
+  server.use(
+    http.get("https://tenants.floofpark.com/api/v1/tenants/t1", () =>
+      HttpResponse.json({ ...TENANT, metadata: null }),
+    ),
+  );
+  wrap("/tenants/t1");
+  await waitFor(() =>
+    expect(screen.getByRole("heading", { name: "Acme Vet" })).toBeInTheDocument(),
+  );
+  expect(screen.queryByText(/Daycare/i)).not.toBeInTheDocument();
 });
