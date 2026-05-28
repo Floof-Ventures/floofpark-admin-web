@@ -22,7 +22,10 @@ export function SuperadminGate({ children }: { children: React.ReactNode }) {
         user: `user:${me.data!.email}`,
         relation: "superadmin",
         object_type: "tenant",
-        object_id: "platform",
+        // Platform tenant is keyed by its UUID (PLATFORM_TENANT_ID in
+        // floofpark-types), not its slug "platform". bootstrap_superadmin
+        // writes tuples on this UUID; checking the slug returns allowed:false.
+        object_id: "00000000-0000-0000-0000-000000000001",
       }),
   });
 
