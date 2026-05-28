@@ -62,17 +62,28 @@ test("redirects to login when /me 401s and refresh also fails", async () => {
 
 test("uses email as authz subject", async () => {
   let observed: string | undefined;
+  let observedObjectType: string | undefined;
+  let observedObjectId: string | undefined;
   server.use(
     http.get("https://auth.floofpark.com/api/v1/auth/me", () =>
       HttpResponse.json({ email: "z@floof.ventures", user_id: null }),
     ),
     http.post("https://auth.floofpark.com/api/v1/authz/check", async ({ request }) => {
-      const body = (await request.json()) as { user: string; relation: string };
+      const body = (await request.json()) as {
+        user: string;
+        relation: string;
+        object_type: string;
+        object_id: string;
+      };
       observed = `${body.user}#${body.relation}`;
+      observedObjectType = body.object_type;
+      observedObjectId = body.object_id;
       return HttpResponse.json({ allowed: true });
     }),
   );
   wrap(<SuperadminGate><div data-testid="inner">ok</div></SuperadminGate>);
   await waitFor(() => expect(screen.getByTestId("inner")).toBeInTheDocument());
   expect(observed).toBe("user:z@floof.ventures#superadmin");
+  expect(observedObjectType).toBe("tenant");
+  expect(observedObjectId).toBe("00000000-0000-0000-0000-000000000001");
 });
